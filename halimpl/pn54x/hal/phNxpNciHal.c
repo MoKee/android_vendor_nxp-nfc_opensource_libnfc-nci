@@ -2583,13 +2583,13 @@ int phNxpNciHal_close(void)
         read_failed_disable_nfc = FALSE;
         goto close_and_return;
     }
-#endif
+
     if(write_unlocked_status == NFCSTATUS_FAILED)
     {
         NXPLOG_NCIHAL_D("phNxpNciHal_close i2c write failed .Clean and Return");
         goto close_and_return;
     }
-
+#endif
     if((uiccListenMask & 0x1) == 0x01)
     {
         NXPLOG_NCIHAL_D ("phNxpNciHal_close (): Adding A passive listen");
