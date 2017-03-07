@@ -121,27 +121,3 @@ LOCAL_CFLAGS += $(D_CFLAGS)
 #LOCAL_CFLAGS += -DFELICA_CLT_ENABLE
 #-DNXP_PN547C1_DOWNLOAD
 include $(BUILD_SHARED_LIBRARY)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE       := libnfc-brcm.conf
-LOCAL_MODULE_TAGS  := optional
-LOCAL_MODULE_CLASS := ETC
-LOCAL_MODULE_PATH  := $(TARGET_OUT_ETC)
-LOCAL_SRC_FILES    := $(LOCAL_MODULE)
-include $(BUILD_PREBUILT)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE       := libnfc-nxp.conf
-LOCAL_MODULE_TAGS  := optional
-LOCAL_MODULE_CLASS := ETC
-LOCAL_MODULE_PATH  := $(TARGET_OUT_ETC)
-LOCAL_SRC_FILES    := libnfc-nxp-PN66T_example.conf
-include $(BUILD_PREBUILT)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE       := libnfc-nxp_default.conf
-LOCAL_MODULE_TAGS  := optional
-LOCAL_MODULE_CLASS := ETC
-LOCAL_MODULE_PATH  := $(TARGET_OUT_ETC)
-LOCAL_SRC_FILES    := libnfc-nxp-PN66T_example.conf
-include $(BUILD_PREBUILT)
