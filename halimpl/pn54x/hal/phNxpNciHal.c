@@ -1221,6 +1221,92 @@ void read_retry()
     }
 }
 /******************************************************************************
+ * Function         phNxpNciHal_check_eSE_Session_Identity
+ *
+ * Description      This function is called at init time to check
+ *                  the presence of ese related info and disable SWP interfaces.
+ *
+ * Returns          void.
+ *
+ ******************************************************************************/
+static NFCSTATUS phNxpNciHal_check_eSE_Session_Identity(void)
+{
+    struct stat st;
+    int ret = 0;
+    NFCSTATUS status = NFCSTATUS_FAILED;
+    const char config_eseinfo_path[] = "/data/nfc/nfaStorage.bin1";
+    static uint8_t session_identity[8] = {0x00};
+    uint8_t default_session[8] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
+    long retlen = 0;
+#if (NFC_NXP_STAT_DUAL_UICC_WO_EXT_SWITCH == TRUE)
+    static uint8_t disable_swp_intf[] = {0x20, 0x02, 0x09, 0x02, 0xA0, 0xEC, 0x01, 0x00,
+                                                                 0xA0, 0xD4, 0x01, 0x00};
+#else
+    static uint8_t disable_swp_intf[] = {0x20, 0x02, 0x05, 0x01, 0xA0, 0xEC, 0x01, 0x00};
+#endif
+    if (stat(config_eseinfo_path, &st) == -1)
+    {
+        NXPLOG_NCIHAL_D("%s file not present = %s", __FUNCTION__, config_eseinfo_path);
+    }
+    else
+    {
+        phNxpNci_EEPROM_info_t mEEPROM_info = {0};
+        mEEPROM_info.request_mode = GET_EEPROM_DATA;
+        mEEPROM_info.request_type = EEPROM_ESE_SESSION_ID;
+        mEEPROM_info.buffer = session_identity;
+        mEEPROM_info.bufflen = sizeof(session_identity);
+        status = request_EEPROM(&mEEPROM_info);
+        if(status == NFCSTATUS_OK)
+        {
+            if(!memcmp((uint8_t*)session_identity, (uint8_t*)default_session, sizeof(session_identity)))
+            {
+                status = NFCSTATUS_FAILED;
+            }
+            else
+            {
+                status = NFCSTATUS_OK;
+            }
+        }
+    }
+
+    if(status == NFCSTATUS_FAILED)
+    {
+        /*Disable SWP1 and 1A interfaces*/
+        status = phNxpNciHal_send_ext_cmd(sizeof(disable_swp_intf),
+                                          disable_swp_intf);
+        if (status != NFCSTATUS_SUCCESS) {
+            NXPLOG_NCIHAL_E("NXP disable SWP interface_set command failed");
+        }
+        pwr_link_required = TRUE;
+    }
+    return status;
+}
+/*******************************************************************************
+**
+** Function         phNxpNciHal_check_delete_nfaStorage_DHArea
+**
+** Description      check the file and delete if present.
+**
+**
+** Returns          void
+**
+*******************************************************************************/
+void phNxpNciHal_check_delete_nfaStorage_DHArea()
+{
+    struct stat st;
+    const char config_eseinfo_path[] = "/data/nfc/nfaStorage.bin1";
+    if (stat(config_eseinfo_path, &st) == -1)
+    {
+        ALOGD("%s file not present = %s", __FUNCTION__, config_eseinfo_path);
+    }
+    else
+    {
+        ALOGD("%s file present = %s", __FUNCTION__, config_eseinfo_path);
+        remove(config_eseinfo_path);
+        ALOGD("%s Deleting the file present = %s", __FUNCTION__, config_eseinfo_path);
+    }
+}
+/******************************************************************************
  * Function         phNxpNciHal_core_initialized
  *
  * Description      This function is called by libnfc-nci after successful open
@@ -2281,67 +2367,7 @@ invoke_callback:
     return NFCSTATUS_SUCCESS;
 }
 #if(NFC_NXP_CHIP_TYPE != PN547C2)
-/******************************************************************************
- * Function         phNxpNciHal_check_eSE_Session_Identity
- *
- * Description      This function is called at init time to check
- *                  the presence of ese related info and disable SWP interfaces.
- *
- * Returns          void.
- *
- ******************************************************************************/
-static NFCSTATUS phNxpNciHal_check_eSE_Session_Identity(void)
-{
-    struct stat st;
-    int ret = 0;
-    NFCSTATUS status = NFCSTATUS_FAILED;
-    const char config_eseinfo_path[] = "/data/nfc/nfaStorage.bin1";
-    static uint8_t session_identity[8] = {0x00};
-    uint8_t default_session[8] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
-    long retlen = 0;
-#if (NFC_NXP_STAT_DUAL_UICC_WO_EXT_SWITCH == TRUE)
-    static uint8_t disable_swp_intf[] = {0x20, 0x02, 0x09, 0x02, 0xA0, 0xEC, 0x01, 0x00,
-                                                                 0xA0, 0xD4, 0x01, 0x00};
-#else
-    static uint8_t disable_swp_intf[] = {0x20, 0x02, 0x05, 0x01, 0xA0, 0xEC, 0x01, 0x00};
-#endif
-    if (stat(config_eseinfo_path, &st) == -1)
-    {
-        NXPLOG_NCIHAL_D("%s file not present = %s", __FUNCTION__, config_eseinfo_path);
-    }
-    else
-    {
-        phNxpNci_EEPROM_info_t mEEPROM_info = {0};
-        mEEPROM_info.request_mode = GET_EEPROM_DATA;
-        mEEPROM_info.request_type = EEPROM_ESE_SESSION_ID;
-        mEEPROM_info.buffer = session_identity;
-        mEEPROM_info.bufflen = sizeof(session_identity);
-        status = request_EEPROM(&mEEPROM_info);
-        if(status == NFCSTATUS_OK)
-        {
-            if(!memcmp((uint8_t*)session_identity, (uint8_t*)default_session, sizeof(session_identity)))
-            {
-                status = NFCSTATUS_FAILED;
-            }
-            else
-            {
-                status = NFCSTATUS_OK;
-            }
-        }
-    }
 
-    if(status == NFCSTATUS_FAILED)
-    {
-        /*Disable SWP1 and 1A interfaces*/
-        status = phNxpNciHal_send_ext_cmd(sizeof(disable_swp_intf),
-                                          disable_swp_intf);
-        if (status != NFCSTATUS_SUCCESS) {
-            NXPLOG_NCIHAL_E("NXP disable SWP interface_set command failed");
-        }
-        pwr_link_required = TRUE;
-    }
-    return status;
-}
 
 /******************************************************************************
  * Function         phNxpNciHal_CheckRFCmdRespStatus
@@ -2371,31 +2397,7 @@ NFCSTATUS phNxpNciHal_CheckRFCmdRespStatus()
     }
     return status;
 }
-/*******************************************************************************
-**
-** Function         phNxpNciHal_check_delete_nfaStorage_DHArea
-**
-** Description      check the file and delete if present.
-**
-**
-** Returns          void
-**
-*******************************************************************************/
-void phNxpNciHal_check_delete_nfaStorage_DHArea()
-{
-    struct stat st;
-    const char config_eseinfo_path[] = "/data/nfc/nfaStorage.bin1";
-    if (stat(config_eseinfo_path, &st) == -1)
-    {
-        ALOGD("%s file not present = %s", __FUNCTION__, config_eseinfo_path);
-    }
-    else
-    {
-        ALOGD("%s file present = %s", __FUNCTION__, config_eseinfo_path);
-        remove(config_eseinfo_path);
-        ALOGD("%s Deleting the file present = %s", __FUNCTION__, config_eseinfo_path);
-    }
-}
+
 /******************************************************************************
  * Function         phNxpNciHalRFConfigCmdRecSequence
  *
