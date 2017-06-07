@@ -442,6 +442,7 @@ static void phTmlNfc_TmlThread(void *pParam)
                 {
                     memcpy(gpphTmlNfc_Context->tReadInfo.pBuffer, temp, dwNoBytesWrRd);
 
+#if (NXP_NFCC_I2C_READ_WRITE_IMPROVEMENT == TRUE)
                     read_count = 0;
                     NXPLOG_TML_D("PN54X - I2C Read successful.....len = %d\n", dwNoBytesWrRd);
                     /* This has to be reset only after a successful read */
@@ -462,6 +463,7 @@ static void phTmlNfc_TmlThread(void *pParam)
                             gpphTmlNfc_Context->bWriteCbInvoked = FALSE;
                         }
                     }
+#endif
                     /* Update the actual number of bytes read including header */
                     gpphTmlNfc_Context->tReadInfo.wLength = (uint16_t) (dwNoBytesWrRd);
                     dwNoBytesWrRd = PH_TMLNFC_RESET_VALUE;

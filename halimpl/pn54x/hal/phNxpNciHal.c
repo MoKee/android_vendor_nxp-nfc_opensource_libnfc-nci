@@ -64,7 +64,9 @@ static uint8_t pwr_link_required = FALSE;
 static uint8_t config_access = FALSE;
 static NFCSTATUS phNxpNciHal_FwDwnld(void);
 static NFCSTATUS phNxpNciHal_SendCmd(uint8_t cmd_len, uint8_t* pcmd_buff);
+#if(NFC_NXP_CHIP_TYPE != PN547C2)
 static void phNxpNciHal_check_delete_nfaStorage_DHArea();
+#endif
 /* NCI HAL Control structure */
 phNxpNciHal_Control_t nxpncihal_ctrl;
 
@@ -120,7 +122,9 @@ static void *phNxpNciHal_client_thread(void *arg);
 static void phNxpNciHal_get_clk_freq(void);
 static void phNxpNciHal_set_clock(void);
 static void phNxpNciHal_check_factory_reset(void);
+#if(NFC_NXP_CHIP_TYPE != PN547C2)
 static NFCSTATUS phNxpNciHal_check_eSE_Session_Identity(void);
+#endif
 static void phNxpNciHal_print_res_status( uint8_t *p_rx_data, uint16_t *p_len);
 static NFCSTATUS phNxpNciHal_CheckValidFwVersion(void);
 static void phNxpNciHal_enable_i2c_fragmentation();
@@ -1502,12 +1506,12 @@ retry_core_init:
         setConfigAlways = num;
     }
     NXPLOG_NCIHAL_D ("EEPROM_fw_dwnld_flag : 0x%02x SetConfigAlways flag : 0x%02x", fw_dwnld_flag, setConfigAlways);
-
+#if(NFC_NXP_CHIP_TYPE != PN547C2)
     if(fw_dwnld_flag == 0x01)
     {
         phNxpNciHal_check_delete_nfaStorage_DHArea();
     }
-
+#endif
     if((TRUE == fw_dwnld_flag) || (TRUE == setConfigAlways) || isNxpRFConfigModified() || isNxpConfigModified())
     {
         config_access = TRUE;
@@ -2057,6 +2061,7 @@ retry_core_init:
     if(!((*p_core_init_rsp_params > 0) && (*p_core_init_rsp_params < 4)))
     {
 #if(NFC_NXP_ESE ==  TRUE)
+#if(NFC_NXP_CHIP_TYPE != PN547C2)
         status = phNxpNciHal_check_eSE_Session_Identity();
         if(status != NFCSTATUS_SUCCESS)
         {
@@ -2064,6 +2069,7 @@ retry_core_init:
             retry_core_init_cnt++;
             goto retry_core_init;
         }
+#endif
 #endif
         status = phNxpNciHal_send_ext_cmd(sizeof(cmd_reset_nci),cmd_reset_nci);
         if(status == NFCSTATUS_SUCCESS )
@@ -2765,13 +2771,13 @@ int phNxpNciHal_close(void)
         read_failed_disable_nfc = FALSE;
         goto close_and_return;
     }
-#endif
+
     if(write_unlocked_status == NFCSTATUS_FAILED)
     {
         NXPLOG_NCIHAL_D("phNxpNciHal_close i2c write failed .Clean and Return");
         goto close_and_return;
     }
-
+#endif
     if((uiccListenMask & 0x1) == 0x01)
     {
         NXPLOG_NCIHAL_D ("phNxpNciHal_close (): Adding A passive listen");
