@@ -199,6 +199,27 @@ static int hal_get_fw_dwnld_flag(const struct nfc_nci_device *p_dev, uint8_t* fw
     return retval;
 }
 
+#ifdef NFC_ID_EMULATION
+/*******************************************************************************
+**
+** Function         hal_set_uid
+**
+** Description      Set UID for NFCID emulation.
+**
+** Returns          0 if successful
+**
+*******************************************************************************/
+static int hal_set_uid(const struct nfc_nci_device *p_dev, uint16_t data_len,
+        const uint8_t *p_data)
+{
+    int retval = 0;
+    pn547_dev_t* dev = (pn547_dev_t*) p_dev;
+
+    retval = phNxpNciHal_set_uid(data_len, p_data);
+    return retval;
+}
+#endif /* NFC_ID_EMULATION */
+
 /*************************************
  * Generic device handling.
  *************************************/
@@ -259,6 +280,9 @@ static int nfc_open(const hw_module_t* module, const char* name,
         dev->nci_device.close = hal_close;
         dev->nci_device.control_granted = hal_control_granted;
         dev->nci_device.power_cycle = hal_power_cycle;
+#ifdef NFC_ID_EMULATION
+        dev->nci_device.set_uid = hal_set_uid;
+#endif /* NFC_ID_EMULATION */
         dev->check_fw_dwnld_flag = hal_get_fw_dwnld_flag;
         *device = (hw_device_t*) dev;
     }

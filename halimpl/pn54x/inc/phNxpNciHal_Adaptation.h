@@ -53,4 +53,7 @@ int phNxpNciHal_MinOpen(nfc_stack_callback_t *p_cback,
         nfc_stack_data_callback_t *p_data_cback);
 int phNxpNciHal_Minclose(void);
 int phNxpNciHal_getFWDownloadFlag(uint8_t* fwDnldRequest);
+#ifdef NFC_ID_EMULATION
+int phNxpNciHal_set_uid(uint16_t data_len, const uint8_t *p_data);
+#endif /* NFC_ID_EMULATION */
 #endif /* _PHNXPNCIHAL_ADAPTATION_H_ */

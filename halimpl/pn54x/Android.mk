@@ -68,6 +68,10 @@ else ifeq ($(NXP_CHIP_TYPE),$(PN553))
 D_CFLAGS += -DNFC_NXP_CHIP_TYPE=PN553
 endif
 
+ifneq (false,$(TARGET_NFC_ID_EMULATION))
+D_CFLAGS += -DNFC_ID_EMULATION
+endif
+
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 ifeq ($(NXP_CHIP_TYPE),$(PN547C2))

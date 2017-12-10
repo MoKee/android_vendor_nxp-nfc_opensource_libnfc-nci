@@ -90,6 +90,10 @@ else
 D_CFLAGS += -DJCOP_WA_ENABLE=TRUE
 endif
 
+ifneq (false,$(TARGET_NFC_ID_EMULATION))
+D_CFLAGS += -DNFC_ID_EMULATION
+endif
+
 #Routing Entries optimization
 D_CFLAGS += -DNFC_NXP_LISTEN_ROUTE_TBL_OPTIMIZATION=TRUE
 ######################################
